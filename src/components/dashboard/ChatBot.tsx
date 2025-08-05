@@ -17,14 +17,27 @@ interface ChatBotProps {
 }
 
 export function ChatBot({ isOpen, onClose }: ChatBotProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content: 'Hello! I\'m your AI assistant for the Neon Data Matrix dashboard. How can I help you analyze your business data today?',
-      sender: 'bot',
-      timestamp: new Date()
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const savedMessages = localStorage.getItem('chatbot-messages');
+    if (savedMessages) {
+      try {
+        return JSON.parse(savedMessages).map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      } catch {
+        // If parsing fails, return default message
+      }
     }
-  ]);
+    return [
+      {
+        id: '1',
+        content: 'Hello! I\'m your AI assistant for the Neon Data Matrix dashboard. How can I help you analyze your business data today?',
+        sender: 'bot',
+        timestamp: new Date()
+      }
+    ];
+  });
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -90,6 +103,11 @@ export function ChatBot({ isOpen, onClose }: ChatBotProps) {
     e.preventDefault();
     sendMessage(inputValue);
   };
+
+  // Save messages to localStorage whenever messages change
+  useEffect(() => {
+    localStorage.setItem('chatbot-messages', JSON.stringify(messages));
+  }, [messages]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
